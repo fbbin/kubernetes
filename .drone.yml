@@ -1,0 +1,25 @@
+kind: pipeline
+name: default
+workspace:
+    base: /go
+    path: src/k8s.io/kubernetes
+
+steps:
+- name: build
+  image: fanux/kube-build:v1.12.1-2  
+  environment: 
+    GO111MODULE: on # 启动go mod
+  commands:
+      - make generated_files UPDATE_API_KNOWN_VIOLATIONS=true   # 这个是一个known api校验，不加编译可能会报错
+      - KUBE_GIT_TREE_STATE="clean" KUBE_GIT_VERSION=v1.14.0 KUBE_BUILD_PLATFORMS=linux/amd64 make all WHAT=cmd/kubelet GOFLAGS=-v  # 几个环境变量特别重要，如不加clean编译出来版本号就会加dirty后缀，需要加版本号不然很多时候无法正常工作，加构建平台，这样无需编译多个bin文件加快编译速度，WHAT里指定需要编译什么代码，大部分情况无需编译有所组件
+      - ls  _output/bin/  # 这里能看到编译后的二进制文件
+
+- name: publish
+  image: plugins/github-release
+  settings:
+    api_key: 
+        from_secret: git-token
+    files: _output/bin/kubelet
+    title: ${DRONE_TAG}
+    when:
+        event: tag
