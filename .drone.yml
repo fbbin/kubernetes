@@ -21,5 +21,6 @@ steps:
         from_secret: git-token
     files: _output/bin/kubelet
     title: ${DRONE_TAG}
+    note: Test.md
     when:
         event: tag
