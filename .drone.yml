@@ -24,3 +24,4 @@ steps:
     note: Test.md
     when:
         event: tag
+        event: push
